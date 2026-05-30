@@ -54,7 +54,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /robot_description
+        Value: /r1/robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -145,7 +145,7 @@ Visualization Manager:
           Value: true
         base_link:
           Value: true
-        bcr_bot/base_link/kinect_camera:
+        r1/base_link/kinect_camera:
           Value: true
         front_left_wheel:
           Value: true
@@ -192,7 +192,7 @@ Visualization Manager:
               imu_frame:
                 {}
               kinect_camera:
-                bcr_bot/base_link/kinect_camera:
+                r1/base_link/kinect_camera:
                   {}
                 kinect_camera_optical:
                   {}
@@ -234,7 +234,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Best Effort
-        Value: /bcr_bot/scan
+        Value: /r1/scan
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
