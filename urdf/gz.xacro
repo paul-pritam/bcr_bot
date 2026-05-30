@@ -12,6 +12,8 @@
         </plugin>
 
         <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+            <joint_name>middle_left_wheel_joint</joint_name>
+            <joint_name>middle_right_wheel_joint</joint_name>
         </plugin>
 
         <!-- ........................... DIFFERENTIAL DRIVE PLUGIN ................................... -->
@@ -86,12 +88,32 @@
 
     <xacro:if value="$(arg camera_enabled)">
         <gazebo reference="kinect_camera">
-            <sensor type="depth_camera" name="kinect_camera">
+            <!-- RGB Camera for Image and CameraInfo (Uses optical frame for Foxglove Z-forward projection) -->
+            <sensor type="camera" name="kinect_camera">
+                <update_rate>30.0</update_rate>
+                <topic>kinect_camera/image</topic>
+                <gz_frame_id>kinect_camera_optical</gz_frame_id>
+                <camera>
+                    <camera_info_topic>kinect_camera/camera_info</camera_info_topic>
+                    <horizontal_fov>${radians(camera_horizontal_fov)}</horizontal_fov>
+                    <image>
+                        <width>640</width>
+                        <height>480</height>
+                        <format>R8G8B8</format>
+                    </image>
+                    <clip>
+                        <near>0.05</near>
+                        <far>8.0</far>
+                    </clip>
+                </camera>
+            </sensor>
+
+            <!-- Depth Camera for PointCloud (Uses robot frame for X-forward points) -->
+            <sensor type="depth_camera" name="kinect_camera_depth">
                 <update_rate>30.0</update_rate>
                 <topic>kinect_camera</topic>
                 <gz_frame_id>kinect_camera</gz_frame_id>
                 <camera>
-                    <camera_info_topic>kinect_camera/camera_info</camera_info_topic>
                     <horizontal_fov>${radians(camera_horizontal_fov)}</horizontal_fov>
                     <image>
                         <width>640</width>

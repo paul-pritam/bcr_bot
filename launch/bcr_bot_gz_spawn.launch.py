@@ -23,7 +23,7 @@ def generate_launch_description():
     position_y = LaunchConfiguration("position_y")
     orientation_yaw = LaunchConfiguration("orientation_yaw")
     camera_enabled = LaunchConfiguration("camera_enabled", default=True)
-    stereo_camera_enabled = LaunchConfiguration("stereo_camera_enabled", default=False)
+    stereo_camera_enabled = LaunchConfiguration("stereo_camera_enabled", default=True)
     two_d_lidar_enabled = LaunchConfiguration("two_d_lidar_enabled", default=True)
     odometry_source = LaunchConfiguration("odometry_source")
 
@@ -41,6 +41,7 @@ def generate_launch_description():
         executable="robot_state_publisher",
         name="robot_state_publisher",
         parameters=[
+                    {'use_sim_time': True},
                     {'robot_description': Command( \
                     ['xacro ', join(bcr_bot_path, 'urdf/bcr_bot.xacro'),
                     ' camera_enabled:=', camera_enabled,
@@ -77,12 +78,12 @@ def generate_launch_description():
             "/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry",
             "/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V",
             "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
-            "/kinect_camera@sensor_msgs/msg/Image[gz.msgs.Image",
+            "/kinect_camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
             "/stereo_camera/left/image_raw@sensor_msgs/msg/Image[gz.msgs.Image",
-            "stereo_camera/right/image_raw@sensor_msgs/msg/Image[gz.msgs.Image",
-            "kinect_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
-            "stereo_camera/left/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
-            "stereo_camera/right/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+            "/stereo_camera/right/image_raw@sensor_msgs/msg/Image[gz.msgs.Image",
+            "/kinect_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+            "/stereo_camera/left/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+            "/stereo_camera/right/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
             "/kinect_camera/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked",
             "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
             "/world/default/model/bcr_bot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model"
@@ -91,19 +92,19 @@ def generate_launch_description():
             ('/world/default/model/bcr_bot/joint_state', 'bcr_bot/joint_states'),
             ('/odom', 'bcr_bot/odom'),
             ('/scan', 'bcr_bot/scan'),
-            ('/kinect_camera', 'bcr_bot/kinect_camera'),
+            ('/kinect_camera/image', 'bcr_bot/kinect_camera/image'),
             ('/stereo_camera/left/image_raw', 'bcr_bot/stereo_camera/left/image_raw'),
             ('/stereo_camera/right/image_raw', 'bcr_bot/stereo_camera/right/image_raw'),
             ('/imu', 'bcr_bot/imu'),
             ('/cmd_vel', 'bcr_bot/cmd_vel'),
-            ('kinect_camera/camera_info', 'bcr_bot/kinect_camera/camera_info'),
-            ('stereo_camera/left/camera_info', 'bcr_bot/stereo_camera/left/camera_info'),
-            ('stereo_camera/right/camera_info', 'bcr_bot/stereo_camera/right/camera_info'),
+            ('/kinect_camera/camera_info', 'bcr_bot/kinect_camera/camera_info'),
+            ('/stereo_camera/left/camera_info', 'bcr_bot/stereo_camera/left/camera_info'),
+            ('/stereo_camera/right/camera_info', 'bcr_bot/stereo_camera/right/camera_info'),
             ('/kinect_camera/points', 'bcr_bot/kinect_camera/points'),
         ]
     )
 
-    transform_publisher = Node(
+    '''transform_publisher = Node(
         package="tf2_ros",
         executable="static_transform_publisher",
         arguments = ["--x", "0.0",
@@ -114,7 +115,7 @@ def generate_launch_description():
                     "--roll", "0.0",
                     "--frame-id", "kinect_camera",
                     "--child-frame-id", "bcr_bot/base_footprint/kinect_camera"]
-    )
+    )'''
 
     return LaunchDescription([
         DeclareLaunchArgument("camera_enabled", default_value = camera_enabled),

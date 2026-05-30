@@ -90,7 +90,7 @@
         <visual>
             <origin xyz="0 0 -0.205" rpy="0 0 0" />
             <geometry>
-                <mesh filename="file://$(find bcr_bot)/meshes/bcr_bot_mesh.dae" scale="1 1 1"/>
+                <mesh filename="package://bcr_bot/meshes/bcr_bot_mesh.dae" scale="1 1 1"/>
             </geometry>
         </visual>
 
@@ -185,7 +185,7 @@
             <visual>
                 <origin xyz="0 0 0" rpy="0 0 0" />
                 <geometry>
-                    <mesh filename="file://$(find bcr_bot)/meshes/kinect/d415.dae"/>
+                    <mesh filename="package://bcr_bot/meshes/kinect/d415.dae"/>
                 </geometry>
                 <material name="black"/>
             </visual>
@@ -231,7 +231,7 @@
             <visual>
                 <origin xyz="0 0 0" rpy="0 0 0" />
                 <geometry>
-                    <mesh filename="file://$(find bcr_bot)/meshes/kinect/d415.dae"/>
+                    <mesh filename="package://bcr_bot/meshes/kinect/d415.dae"/>
                 </geometry>
                 <material name="black"/>
             </visual>
