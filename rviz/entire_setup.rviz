@@ -55,7 +55,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /r1/robot_description
+        Value: robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -156,14 +156,14 @@ Visualization Manager:
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.009999999776482582
-      Style: Points
+      Style: Flat Squares
       Topic:
         Depth: 5
         Durability Policy: Volatile
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /r1/kinect_camera/points
+        Value: /bcr_bot/kinect_camera/points
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -197,7 +197,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /r1/scan
+        Value: /bcr_bot/scan
       Use Fixed Frame: true
       Use rainbow: true
       Value: true

@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 from os.path import join
-import yaml
 from xacro import parse, process_doc
 
 from launch import LaunchDescription
@@ -28,10 +27,6 @@ def generate_launch_description():
     two_d_lidar_enabled = LaunchConfiguration("two_d_lidar_enabled", default=True)
     odometry_source = LaunchConfiguration("odometry_source")
 
-    with open(join(bcr_bot_path, 'config', 'namespace.yaml'), 'r') as f:
-        config = yaml.safe_load(f)
-    robot_namespace = config.get('robot', 'bcr_bot')
-
     # robot_description_content = get_xacro_to_doc(
     #     join(bcr_bot_path, "urdf", "bcr_bot.xacro"),
     #     {"sim_gz": "true",
@@ -45,7 +40,6 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         name="robot_state_publisher",
-        namespace=robot_namespace,
         parameters=[
                     {'use_sim_time': True},
                     {'robot_description': Command( \
@@ -54,11 +48,10 @@ def generate_launch_description():
                     ' stereo_camera_enabled:=', stereo_camera_enabled,
                     ' two_d_lidar_enabled:=', two_d_lidar_enabled,
                     ' odometry_source:=', odometry_source,
-                    ' robot_namespace:=', robot_namespace,
                     ' sim_gz:=', "true"
                     ])}],
         remappings=[
-            ('/joint_states', f'{robot_namespace}/joint_states'),
+            ('/joint_states', 'bcr_bot/joint_states'),
         ]
     )
 
@@ -66,8 +59,8 @@ def generate_launch_description():
         package="ros_gz_sim",
         executable="create",
         arguments=[
-            "-topic", f"/{robot_namespace}/robot_description",
-            "-name", robot_namespace,
+            "-topic", "/robot_description",
+            "-name", "bcr_bot",
             "-allow_renaming", "true",
             "-z", "0.28",
             "-x", position_x,
@@ -93,21 +86,21 @@ def generate_launch_description():
             "/stereo_camera/right/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
             "/kinect_camera/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked",
             "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
-            f"/world/default/model/{robot_namespace}/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model"
+            "/world/default/model/bcr_bot/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model"
         ],
         remappings=[
-            (f'/world/default/model/{robot_namespace}/joint_state', f'{robot_namespace}/joint_states'),
-            ('/odom', f'{robot_namespace}/odom'),
-            ('/scan', f'{robot_namespace}/scan'),
-            ('/kinect_camera/image', f'{robot_namespace}/kinect_camera/image'),
-            ('/stereo_camera/left/image_raw', f'{robot_namespace}/stereo_camera/left/image_raw'),
-            ('/stereo_camera/right/image_raw', f'{robot_namespace}/stereo_camera/right/image_raw'),
-            ('/imu', f'{robot_namespace}/imu'),
-            ('/cmd_vel', f'{robot_namespace}/cmd_vel'),
-            ('/kinect_camera/camera_info', f'{robot_namespace}/kinect_camera/camera_info'),
-            ('/stereo_camera/left/camera_info', f'{robot_namespace}/stereo_camera/left/camera_info'),
-            ('/stereo_camera/right/camera_info', f'{robot_namespace}/stereo_camera/right/camera_info'),
-            ('/kinect_camera/points', f'{robot_namespace}/kinect_camera/points'),
+            ('/world/default/model/bcr_bot/joint_state', 'bcr_bot/joint_states'),
+            ('/odom', 'bcr_bot/odom'),
+            ('/scan', 'bcr_bot/scan'),
+            ('/kinect_camera/image', 'bcr_bot/kinect_camera/image'),
+            ('/stereo_camera/left/image_raw', 'bcr_bot/stereo_camera/left/image_raw'),
+            ('/stereo_camera/right/image_raw', 'bcr_bot/stereo_camera/right/image_raw'),
+            ('/imu', 'bcr_bot/imu'),
+            ('/cmd_vel', 'bcr_bot/cmd_vel'),
+            ('/kinect_camera/camera_info', 'bcr_bot/kinect_camera/camera_info'),
+            ('/stereo_camera/left/camera_info', 'bcr_bot/stereo_camera/left/camera_info'),
+            ('/stereo_camera/right/camera_info', 'bcr_bot/stereo_camera/right/camera_info'),
+            ('/kinect_camera/points', 'bcr_bot/kinect_camera/points'),
         ]
     )
 
