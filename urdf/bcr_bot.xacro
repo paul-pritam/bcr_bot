@@ -46,9 +46,6 @@
     <xacro:arg name="sim_gazebo" default="false" />
     <xacro:arg name="sim_ign" default="false" />
     <xacro:arg name="sim_gz" default="false" />
-    <xacro:arg name="odometry_source" default="world" />
-
-    <xacro:property name="odometry_source" value="$(arg odometry_source)"/>
 
     <!-- ............................... LOAD MACROS ................................. -->
 

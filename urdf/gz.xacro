@@ -1,16 +1,13 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="bcr_bot">
+    <xacro:property name="ns" value="$(arg robot_namespace)" scope="global"/>
+    <xacro:property name="tf_prefix_" value="${ns + '/' if ns != '' else ''}" scope="global"/>
 
     <!-- ........................... SENSOR PLUGIN ................................... -->
 
+
+
     <gazebo>
-        <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
-            <render_engine>ogre2</render_engine>
-        </plugin>
-
-        <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu">
-        </plugin>
-
         <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
             <joint_name>middle_left_wheel_joint</joint_name>
             <joint_name>middle_right_wheel_joint</joint_name>
@@ -24,40 +21,22 @@
             <wheel_separation>${traction_track_width+traction_wheel_width-0.01}</wheel_separation>
             <wheel_radius>${traction_wheel_radius+0.01}</wheel_radius>
             <odom_publish_frequency>30</odom_publish_frequency>
-            <topic>/cmd_vel</topic>
-            <xacro:if value="${odometry_source == 'encoders'}">
-                <odom_topic>$(arg wheel_odom_topic)</odom_topic>
-                <tf_topic>/tf</tf_topic>
-            </xacro:if>
-            <frame_id>odom</frame_id>
-            <child_frame_id>base_footprint</child_frame_id>
-        </plugin>
-    </gazebo>
-
-    <!-- ............................. ground truth .................................... -->
-
-    <xacro:if value="${odometry_source == 'world'}">
-    <gazebo>
-        <plugin filename="libgz-sim-odometry-publisher-system"
-            name="gz::sim::systems::OdometryPublisher">
-            <odom_frame>odom</odom_frame>
-            <robot_base_frame>base_footprint</robot_base_frame>
+            <topic>/$(arg robot_namespace)/cmd_vel</topic>
             <odom_topic>$(arg wheel_odom_topic)</odom_topic>
             <tf_topic>/tf</tf_topic>
-            <dimensions>2</dimensions>
-            <odom_publish_frequency>10</odom_publish_frequency>
+            <frame_id>${tf_prefix_}odom</frame_id>
+            <child_frame_id>${tf_prefix_}base_footprint</child_frame_id>
         </plugin>
     </gazebo>
-    </xacro:if>
 
     <!-- ........................... 2D LIDAR config ................................... -->
 
     <xacro:if value="$(arg two_d_lidar_enabled)">
         <gazebo reference="two_d_lidar">
             <sensor name='gpu_lidar' type='gpu_lidar'>
-                <topic>scan</topic>
+                <topic>/$(arg robot_namespace)/scan</topic>
                 <update_rate>${two_d_lidar_update_rate}</update_rate>
-                <gz_frame_id>two_d_lidar</gz_frame_id>
+                <gz_frame_id>${tf_prefix_}two_d_lidar</gz_frame_id>
                 <lidar>
                     <scan>
                         <horizontal>
@@ -92,7 +71,7 @@
             <sensor type="camera" name="kinect_camera">
                 <update_rate>30.0</update_rate>
                 <topic>kinect_camera/image</topic>
-                <gz_frame_id>kinect_camera_optical</gz_frame_id>
+                <gz_frame_id>${tf_prefix_}kinect_camera_optical</gz_frame_id>
                 <camera>
                     <camera_info_topic>kinect_camera/camera_info</camera_info_topic>
                     <horizontal_fov>${radians(camera_horizontal_fov)}</horizontal_fov>
@@ -111,8 +90,8 @@
             <!-- Depth Camera for PointCloud (Uses robot frame for X-forward points) -->
             <sensor type="depth_camera" name="kinect_camera_depth">
                 <update_rate>30.0</update_rate>
-                <topic>kinect_camera</topic>
-                <gz_frame_id>kinect_camera</gz_frame_id>
+                <topic>/$(arg robot_namespace)/kinect_camera</topic>
+                <gz_frame_id>${tf_prefix_}kinect_camera</gz_frame_id>
                 <camera>
                     <horizontal_fov>${radians(camera_horizontal_fov)}</horizontal_fov>
                     <image>
@@ -135,9 +114,9 @@
         <sensor name="imu_sensor" type="imu">
             <always_on>1</always_on>
             <update_rate>1</update_rate>
-            <gz_frame_id>imu_frame</gz_frame_id>
+            <gz_frame_id>${tf_prefix_}imu_frame</gz_frame_id>
             <visualize>true</visualize>
-            <topic>imu</topic>
+            <topic>/$(arg robot_namespace)/imu</topic>
         </sensor>
     </gazebo>
 
@@ -147,7 +126,7 @@
             <sensor type="camera" name="right">
                 <update_rate>10.0</update_rate>
                 <always_on>true</always_on>
-                <gz_frame_id>stereo_camera_optical</gz_frame_id>
+                <gz_frame_id>${tf_prefix_}stereo_camera_optical</gz_frame_id>
                 <pose>0 -0.12 0 0 0 0</pose>
                 <topic>stereo_camera/right/image_raw</topic>
                 <camera_info_topic>stereo_camera/right/camera_info</camera_info_topic>
@@ -167,7 +146,7 @@
                 <topic>stereo_camera/left/image_raw</topic>
                 <update_rate>10.0</update_rate>
                 <always_on>true</always_on>
-                <gz_frame_id>stereo_camera_optical</gz_frame_id>
+                <gz_frame_id>${tf_prefix_}stereo_camera_optical</gz_frame_id>
                 <camera_info_topic>stereo_camera/left/camera_info</camera_info_topic>
                 <pose>0 0 0 0 0 0</pose>
                 <horizontal_fov>1.3962634</horizontal_fov>
