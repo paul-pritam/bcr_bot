@@ -8,7 +8,8 @@ from launch.actions import (
     IncludeLaunchDescription,
     GroupAction,
     AppendEnvironmentVariable,
-    OpaqueFunction
+    OpaqueFunction,
+    TimerAction 
 )
 from launch.substitutions import LaunchConfiguration, Command, PythonExpression
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -58,6 +59,7 @@ def generate_launch_description():
                     'robot_description': Command([
                         'xacro ', os.path.join(bcr_path, 'urdf', 'bcr_bot.xacro'),
                         ' robot_namespace:=', robot_name,
+                        ' wheel_odom_topic:=/', robot_name, '/odom',
                         ' camera_enabled:=', LaunchConfiguration('camera_enabled', default='false'),
                         ' stereo_camera_enabled:=', LaunchConfiguration('stereo_camera_enabled', default='false'),
                         ' two_d_lidar_enabled:=', LaunchConfiguration('two_d_lidar_enabled', default='true'),
@@ -99,6 +101,8 @@ def generate_launch_description():
                 ],
                 remappings=[
                     (f'/world/default/model/{robot_name}/joint_state', f'/{robot_name}/joint_states'),
+                    (f'/{robot_name}/odom', f'/{robot_name}/wheel_odom'),
+
                 ],
                 parameters=[{'use_sim_time': use_sim_time}]
             )
@@ -117,7 +121,7 @@ def generate_launch_description():
             )
 
             # Static TF from world to odom
-            world_to_odom_tf = Node(
+            '''world_to_odom_tf = Node(
                 package='tf2_ros',
                 executable='static_transform_publisher',
                 arguments=[
@@ -130,7 +134,7 @@ def generate_launch_description():
                     '--child-frame-id', f'{robot_name}/odom'
                 ],
                 parameters=[{'use_sim_time': use_sim_time}]
-            )
+            )'''
 
             robot_group = GroupAction([
                 PushRosNamespace(robot_name),
@@ -138,7 +142,7 @@ def generate_launch_description():
                 spawn_node,
                 bridge_node,
                 static_tf,
-                world_to_odom_tf,
+                #world_to_odom_tf,
             ])
             robot_groups.append(robot_group)
 
@@ -150,13 +154,27 @@ def generate_launch_description():
             arguments=['-d', os.path.join(bcr_path, 'rviz', 'entire_setup.rviz')],
             parameters=[{'use_sim_time': use_sim_time}]
         )
+        localization_launch = TimerAction(
+            period=7.0,   # Wait 7 seconds before launching Nav2/AMCL/Map
+            actions=[
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource(
+                        os.path.join(bcr_bot_path, 'launch', 'localization.launch.py')
+                    ),
+                    launch_arguments={
+                        'use_sim_time': use_sim_time,
+                        'robots_config': robots_config
+                    }.items()
+                )
+            ]
+        )
 
         global_bridge = Node(
             package='ros_gz_bridge',
             executable='parameter_bridge',
             arguments=[
                 '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-                '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
+                #'/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
             ],
             output='screen',
             parameters=[{'use_sim_time': use_sim_time}]
@@ -174,7 +192,7 @@ def generate_launch_description():
             }]
         )
 
-        return robot_groups + [global_bridge, rviz_node, foxglove_bridge]
+        return robot_groups + [global_bridge, rviz_node, foxglove_bridge, localization_launch]
 
     return LaunchDescription([
         DeclareLaunchArgument('world_file', default_value=world_file),

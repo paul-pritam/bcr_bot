@@ -22,8 +22,8 @@
             <wheel_radius>${traction_wheel_radius+0.01}</wheel_radius>
             <odom_publish_frequency>30</odom_publish_frequency>
             <topic>/$(arg robot_namespace)/cmd_vel</topic>
-            <odom_topic>$(arg wheel_odom_topic)</odom_topic>
-            <tf_topic>/tf</tf_topic>
+            <odom_topic>/$(arg robot_namespace)/odom</odom_topic>
+            <!--<tf_topic>/tf</tf_topic>-->
             <frame_id>${tf_prefix_}odom</frame_id>
             <child_frame_id>${tf_prefix_}base_footprint</child_frame_id>
         </plugin>
@@ -113,7 +113,7 @@
     <gazebo reference="imu_frame">
         <sensor name="imu_sensor" type="imu">
             <always_on>1</always_on>
-            <update_rate>1</update_rate>
+            <update_rate>30</update_rate>
             <gz_frame_id>${tf_prefix_}imu_frame</gz_frame_id>
             <visualize>true</visualize>
             <topic>/$(arg robot_namespace)/imu</topic>
