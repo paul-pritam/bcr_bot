@@ -96,6 +96,12 @@ def generate_launch_description():
                     f'/{robot_name}/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
                     f'/{robot_name}/kinect_camera@sensor_msgs/msg/Image[gz.msgs.Image',
                     f'/{robot_name}/kinect_camera/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
+                    f'/{robot_name}/kinect_camera/image@sensor_msgs/msg/Image[gz.msgs.Image',
+                    f'/{robot_name}/kinect_camera/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+                    f'/{robot_name}/stereo_camera/left/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
+                    f'/{robot_name}/stereo_camera/left/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
+                    f'/{robot_name}/stereo_camera/right/image_raw@sensor_msgs/msg/Image[gz.msgs.Image',
+                    f'/{robot_name}/stereo_camera/right/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo',
                     f'/{robot_name}/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
                     f'/world/default/model/{robot_name}/joint_state@sensor_msgs/msg/JointState[gz.msgs.Model'
                 ],
@@ -151,7 +157,7 @@ def generate_launch_description():
             executable='rviz2',
             name='rviz2',
             output='screen',
-            arguments=['-d', os.path.join(bcr_path, 'rviz', 'entire_setup.rviz')],
+            arguments=['-d', os.path.join(bcr_path, 'rviz', 'multi.rviz')],
             parameters=[{'use_sim_time': use_sim_time}]
         )
         localization_launch = TimerAction(
@@ -197,8 +203,8 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('world_file', default_value=world_file),
         DeclareLaunchArgument('use_sim_time', default_value=use_sim_time),
-        DeclareLaunchArgument('camera_enabled', default_value='false'),
-        DeclareLaunchArgument('stereo_camera_enabled', default_value='false'),
+        DeclareLaunchArgument('camera_enabled', default_value='true'),
+        DeclareLaunchArgument('stereo_camera_enabled', default_value='true'),
         DeclareLaunchArgument('two_d_lidar_enabled', default_value='true'),
         DeclareLaunchArgument('robots_config', default_value=robots_config),
         *set_resource_paths,
