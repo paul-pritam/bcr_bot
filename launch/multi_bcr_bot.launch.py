@@ -186,7 +186,7 @@ def generate_launch_description():
             parameters=[{'use_sim_time': use_sim_time}]
         )
 
-        foxglove_bridge = Node(
+        '''foxglove_bridge = Node(
             package='foxglove_bridge',
             executable='foxglove_bridge',
             name='foxglove_bridge',
@@ -196,15 +196,15 @@ def generate_launch_description():
                 'send_buffer_limit': 10000000,
                 'use_sim_time': use_sim_time
             }]
-        )
+        )'''
 
-        return robot_groups + [global_bridge, rviz_node, foxglove_bridge, localization_launch]
+        return robot_groups + [global_bridge, rviz_node, localization_launch]
 
     return LaunchDescription([
         DeclareLaunchArgument('world_file', default_value=world_file),
         DeclareLaunchArgument('use_sim_time', default_value=use_sim_time),
-        DeclareLaunchArgument('camera_enabled', default_value='true'),
-        DeclareLaunchArgument('stereo_camera_enabled', default_value='true'),
+        DeclareLaunchArgument('camera_enabled', default_value='false'),
+        DeclareLaunchArgument('stereo_camera_enabled', default_value='false'),
         DeclareLaunchArgument('two_d_lidar_enabled', default_value='true'),
         DeclareLaunchArgument('robots_config', default_value=robots_config),
         *set_resource_paths,
