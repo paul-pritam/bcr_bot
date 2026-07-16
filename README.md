@@ -1,147 +1,158 @@
-# BCR Bot
+# Multi-Robot Navigation Stack (bcr_bot)
 
-https://github.com/blackcoffeerobotics/bcr_bot/assets/13151010/0fc570a3-c70c-415b-8222-b9573d5911c8
+Fork of [blackcoffeerobotics/bcr_bot](https://github.com/blackcoffeerobotics/bcr_bot) extended with a **multi-robot simulation and navigation system** on ROS 2 Jazzy + Gazebo Harmonic.
 
-## About
+Spawns N differential-drive robots in a shared warehouse environment, each with independent namespaced Nav2 stacks, EKF localization, and AMCL — all launched from a single YAML config.
 
-This repository contains a [Gazebo](https://gazebosim.org/home) and [Isaac Sim](https://developer.nvidia.com/isaac/sim) simulation for a differential drive robot, equipped with an IMU, a depth camera, stereo camera and a 2D LiDAR. ROS2 versions also include [Nav2](https://docs.nav2.org/) and [SLAM Tool Box](https://github.com/SteveMacenski/slam_toolbox) support. Currently, the project supports the following combinations - 
+## What I built
 
-1. [ROS Noetic + Gazebo Classic 11 (branch ros1)](https://github.com/blackcoffeerobotics/bcr_bot/tree/ros1?tab=readme-ov-file#noetic--classic-ubuntu-2004)
-2. [ROS2 Humble + Gazebo Classic 11 (branch ros2)](https://github.com/blackcoffeerobotics/bcr_bot/tree/ros2?tab=readme-ov-file#humble--classic-ubuntu-2204)
-3. [ROS2 Humble + Gazebo Fortress (branch ros2)](https://github.com/blackcoffeerobotics/bcr_bot/tree/ros2?tab=readme-ov-file#humble--fortress-ubuntu-2204)
-4. [ROS2 Humble + Gazebo Harmonic (branch ros2)](https://github.com/blackcoffeerobotics/bcr_bot/tree/ros2?tab=readme-ov-file#humble--harmonic-ubuntu-2204)
-5. [ROS2 Humble + Isaac Sim (branch ros2)](https://github.com/blackcoffeerobotics/bcr_bot/tree/ros2?tab=readme-ov-file#humble--isaac-sim-ubuntu-2204)
-6. [ROS2 Jazzy + Gazebo Harmonic (branch ros2-jazzy)](https://github.com/blackcoffeerobotics/bcr_bot/tree/ros2-jazzy?tab=readme-ov-file#jazzy--harmonic-ubuntu-2404)
-7. [ROS2 Jazzy + Isaac Sim (branch ros2-jazzy)](https://github.com/blackcoffeerobotics/bcr_bot/tree/ros2-jazzy?tab=readme-ov-file#jazzy--isaac-sim-ubuntu-2404)
+| Component | File | What it does |
+|---|---|---|
+| Multi-robot spawner | `launch/multi_bcr_bot.launch.py` | Reads `config/robots.yaml`, spawns each robot in Gazebo with its own `ros_gz_bridge`, `robot_state_publisher`, and static TFs under a ROS 2 namespace |
+| Per-robot Nav2 | `launch/multi_nav2.launch.py` | Generates per-robot Nav2 params from `config/nav2_template.yaml` using `<ROBOT_NAME>` substitution, staggers launch with `TimerAction` |
+| Composable Nav2 | `launch/multi_nav2_composed.launch.py` | Same as above but loads Nav2 nodes as composable components into an isolated container for lower memory usage |
+| Multi-robot localization | `launch/localization.launch.py` | Spawns per-robot EKF (`robot_localization`) + AMCL with correctly namespaced frames (`{ns}/odom`, `{ns}/base_footprint`), shared map server |
+| Nav2 template | `config/nav2_template.yaml` | Full Nav2 configuration (DWB planner, costmaps, collision monitor, velocity smoother, docking) parameterized by `<ROBOT_NAME>` |
+| EKF config | `config/ekf.yaml` | 2D EKF fusing wheel odometry + IMU |
+| AMCL config | `config/amcl.yaml` | AMCL with likelihood field model, tuned particle counts |
+| Robot config | `config/robots.yaml` | Define robots: name, spawn position (x, y, yaw). Add more robots by adding entries |
 
-Each of the following sections describes depedencies, build and run instructions for the combinations supported by the `ros2-jazzy` branch.
+### Architecture
 
-## Jazzy + Harmonic (Ubuntu 24.04)
+```
+config/robots.yaml
+        |
+        v
+multi_bcr_bot.launch.py
+        |
+        +-- Gazebo (shared, single instance)
+        |
+        +-- For each robot in robots.yaml:
+        |     +-- robot_state_publisher (namespaced)
+        |     +-- ros_gz_bridge (per-robot sensor topics)
+        |     +-- Gazebo spawn at (x, y, yaw)
+        |     +-- Static TF publishers
+        |
+        +-- localization.launch.py (delayed 7s)
+        |     +-- Per-robot: EKF + AMCL + lifecycle_manager
+        |     +-- Shared: map_server + lifecycle_manager
+        |
+        +-- multi_nav2.launch.py
+              +-- Per-robot: controller_server, planner_server,
+                  behavior_server, bt_navigator, lifecycle_manager
+                  (each in its own namespace)
+```
 
-### Dependencies
+## Prerequisites
 
-Install Gazebo harmonic using ROS2 binaries:
+- Ubuntu 24.04
+- ROS 2 Jazzy
+- Gazebo Harmonic
+
 ```bash
 sudo apt install ros-jazzy-ros-gz-sim ros-jazzy-ros-gz-bridge ros-jazzy-ros-gz-interfaces
 ```
 
-Install other dependencies with [rosdep](http://wiki.ros.org/rosdep).
-```bash
-# From the root directory of the workspace. This will install everything mentioned in package.xml
-rosdep install --from-paths src --ignore-src -r -y
-```
-
-### Build
+## Build
 
 ```bash
+cd ~/bcr_ws
 colcon build --packages-select bcr_bot
+source install/setup.bash
 ```
 
-### Run
+## Run
 
-To launch the robot in Gazebo,
+### Single robot (original behavior)
+
 ```bash
 ros2 launch bcr_bot gz.launch.py
 ```
-To view in rviz,
+
+### Multi-robot
+
 ```bash
-ros2 launch bcr_bot rviz.launch.py
+ros2 launch bcr_bot multi_bcr_bot.launch.py
 ```
 
-### Configuration
+This launches 2 robots (default config) in a warehouse. Edit `config/robots.yaml` to add more:
 
-The launch file accepts multiple launch arguments,
-```bash
-ros2 launch bcr_bot gz.launch.py \
-	camera_enabled:=True \
-	stereo_camera_enabled:=False \
-	two_d_lidar_enabled:=True \
-	position_x:=0.0 \
-	position_y:=0.0  \
-	orientation_yaw:=0.0 \
-	odometry_source:=world \
-	world_file:=small_warehouse.sdf
-```
-<!-- **Note:** 
-1. To use stereo_image_proc with the stereo images excute following command: 
-```bash
-ros2 launch stereo_image_proc stereo_image_proc.launch.py left_namespace:=bcr_bot/stereo_camera/left right_namespace:=bcr_bot/stereo_camera/right
-``` -->
-
-### Jazzy + Isaac Sim (Ubuntu 24.04)
-
-### Dependencies
-
-In addition to ROS2 Humble [Isaac Sim installation](https://docs.omniverse.nvidia.com/isaacsim/latest/installation/index.html) with ROS2 extension is required. Remainder of bcr_bot specific dependencies can be installed with [rosdep](http://wiki.ros.org/rosdep)
-
-```bash
-# From the root directory of the workspace. This will install everything mentioned in package.xml
-rosdep install --from-paths src --ignore-src -r -y
+```yaml
+robots:
+  - name: bcr_bot_1
+    x: 0.0
+    y: 0.0
+    yaw: 0.0
+  - name: bcr_bot_2
+    x: 0.0
+    y: 2.0
+    yaw: 0.0
+  - name: bcr_bot_3
+    x: 4.0
+    y: 0.0
+    yaw: 1.57
 ```
 
-### Build
+### Multi-robot with Nav2
 
 ```bash
-colcon build --packages-select bcr_bot
+ros2 launch bcr_bot multi_bcr_bot.launch.py
+# In a separate terminal, after Gazebo is up:
+ros2 launch bcr_bot multi_nav2.launch.py
 ```
 
-### Run
+Or use the composable version for lower overhead:
 
-To launch the robot in Isaac Sim:
-- Open Isaac Sim and load the `warehouse_scene.usd` or `scene.usd` from [here](usd). 
-- Add in extra viewports for different camera views.
-- Start the Simulation: Run the simulation directly within Isaac Sim.
-- The following USDs are included in the package:
-	- `warehouse_scene.usd` - Warehouse scene with a robot.
-	- `scene.usd` - Scene with a robot in a empty world.
-	- `bcr_bot.usd` - Robot model that can be imported into any scene.
-	- `ActionGraphFull.usd` - Action graph for the robot to publish all the required topics.
-
-To view in rviz:
 ```bash
-ros2 launch bcr_bot rviz.launch.py
+ros2 launch bcr_bot multi_nav2_composed.launch.py
 ```
-NOTE: The command to run mapping and navigation is common between all versions of gazebo and Isaac sim see [here](#mapping-with-slam-toolbox).
 
-### Mapping with SLAM Toolbox
+### Mapping (SLAM Toolbox)
 
-SLAM Toolbox is an open-source package designed to map the environment using laser scans and odometry, generating a map for autonomous navigation.
-
-NOTE: The command to run mapping is common between all versions of gazebo.
-
-To start mapping:
 ```bash
 ros2 launch bcr_bot mapping.launch.py
+ros2 run teleop_twist_keyboard teleop_twist_keyboard cmd_vel:=/bcr_bot_1/cmd_vel
 ```
 
-Use the teleop twist keyboard to control the robot and map the area:
+Save the map:
+
 ```bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard cmd_vel:=/bcr_bot/cmd_vel
+ros2 run nav2_map_server map_saver_cli -f src/bcr_bot/config/bcr_map
 ```
 
-To save the map:
+## Launch arguments
+
 ```bash
-cd src/bcr_bot/config
-ros2 run nav2_map_server map_saver_cli -f bcr_map
+ros2 launch bcr_bot gz.launch.py \
+    camera_enabled:=true \
+    stereo_camera_enabled:=false \
+    two_d_lidar_enabled:=true \
+    world_file:=small_warehouse.sdf
 ```
 
-### Using Nav2 with bcr_bot
+## Namespace structure
 
-Nav2 is an open-source navigation package that enables a robot to navigate through an environment easily. It takes laser scan and odometry data, along with the map of the environment, as inputs.
+Every topic, TF, and service is under `/{robot_name}/`:
 
-NOTE: The command to run navigation is common between all versions of gazebo and Isaac sim.
-
-To run Nav2 on bcr_bot:
-```bash
-ros2 launch bcr_bot nav2.launch.py
+```
+/bcr_bot_1/odom
+/bcr_bot_1/scan
+/bcr_bot_1/cmd_vel
+/bcr_bot_1/tf
+/bcr_bot_2/odom
+/bcr_bot_2/scan
+...
 ```
 
-### Simulation and Visualization
-1. Gz Sim (Ignition Gazebo) (small_warehouse World):
-	![](res/gz.jpg)
+The shared `/map` topic is published once by the map server and consumed by all robots' AMCL instances.
 
-2. Isaac Sim:
-	![](res/isaac.jpg) 
+## Based on
 
-3. Rviz (Depth camera) (small_warehouse World):
-	![](res/rviz.jpg)
+- [blackcoffeerobotics/bcr_bot](https://github.com/blackcoffeerobotics/bcr_bot) — original single-robot simulation
+- [Nav2](https://docs.nav2.org/) — navigation framework
+- [robot_localization](https://github.com/cra-ros-pkg/robot_localization) — EKF sensor fusion
+- [SLAM Toolbox](https://github.com/SteveMacenski/slam_toolbox) — online mapping
+
+## License
+
+Apache License 2.0 (same as upstream)
