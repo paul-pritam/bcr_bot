@@ -155,4 +155,4 @@ The shared `/map` topic is published once by the map server and consumed by all 
 
 ## License
 
-Apache License 2.0 (same as upstream)
+Apache License 2.0
